@@ -93,7 +93,5 @@ export const getAppSettings = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase.from("app_settings").select("key, value");
     if (error) throw new Error(error.message);
-    const result: Record<string, unknown> = {};
-    for (const row of data) result[row.key] = row.value;
-    return result;
+    return (data ?? []) as { key: string; value: unknown }[];
   });
