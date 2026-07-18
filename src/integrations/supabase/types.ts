@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          metadata: Json
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
+      announcements: {
+        Row: {
+          active: boolean
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          severity: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          severity?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          severity?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -29,6 +92,87 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          body_md: string
+          cover_url: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          published: boolean
+          published_at: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          body_md: string
+          cover_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          body_md?: string
+          cover_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      broadcast_emails: {
+        Row: {
+          audience: string
+          body_html: string
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          sent_at: string | null
+          sent_count: number
+          status: string
+          subject: string
+        }
+        Insert: {
+          audience?: string
+          body_html: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject: string
+        }
+        Update: {
+          audience?: string
+          body_html?: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          sent_at?: string | null
+          sent_count?: number
+          status?: string
+          subject?: string
         }
         Relationships: []
       }
@@ -62,6 +206,51 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_packages: {
+        Row: {
+          active: boolean
+          bonus_credits: number
+          created_at: string
+          credits: number
+          currency: string
+          description: string | null
+          featured: boolean
+          id: string
+          name: string
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bonus_credits?: number
+          created_at?: string
+          credits: number
+          currency?: string
+          description?: string | null
+          featured?: boolean
+          id?: string
+          name: string
+          price: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bonus_credits?: number
+          created_at?: string
+          credits?: number
+          currency?: string
+          description?: string | null
+          featured?: boolean
+          id?: string
+          name?: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_transactions: {
         Row: {
           created_at: string
@@ -86,6 +275,60 @@ export type Database = {
           metadata?: Json | null
           reason?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      faqs: {
+        Row: {
+          answer: string
+          category: string
+          created_at: string
+          id: string
+          published: boolean
+          question: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          category?: string
+          created_at?: string
+          id?: string
+          published?: boolean
+          question: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          category?: string
+          created_at?: string
+          id?: string
+          published?: boolean
+          question?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      feature_flags: {
+        Row: {
+          description: string | null
+          enabled: boolean
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean
+          key?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -188,6 +431,7 @@ export type Database = {
           email: string | null
           id: string
           preferred_model: string
+          status: string
           updated_at: string
         }
         Insert: {
@@ -199,6 +443,7 @@ export type Database = {
           email?: string | null
           id: string
           preferred_model?: string
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -210,7 +455,73 @@ export type Database = {
           email?: string | null
           id?: string
           preferred_model?: string
+          status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      support_ticket_messages: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          is_staff: boolean
+          ticket_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          is_staff?: boolean
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_staff?: boolean
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          created_at: string
+          id: string
+          priority: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          priority?: string
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          priority?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -256,9 +567,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "super_admin"
       payment_status: "pending" | "approved" | "rejected" | "info_requested"
     }
     CompositeTypes: {
@@ -387,7 +699,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "super_admin"],
       payment_status: ["pending", "approved", "rejected", "info_requested"],
     },
   },

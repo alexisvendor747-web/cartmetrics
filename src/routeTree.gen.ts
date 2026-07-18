@@ -11,9 +11,23 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
+import { Route as AdminSupportRouteImport } from './routes/admin/support'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminPaymentsRouteImport } from './routes/admin/payments'
+import { Route as AdminPackagesRouteImport } from './routes/admin/packages'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminFlagsRouteImport } from './routes/admin/flags'
+import { Route as AdminFaqsRouteImport } from './routes/admin/faqs'
+import { Route as AdminBroadcastRouteImport } from './routes/admin/broadcast'
+import { Route as AdminBlogRouteImport } from './routes/admin/blog'
+import { Route as AdminAuditRouteImport } from './routes/admin/audit'
+import { Route as AdminAnnouncementsRouteImport } from './routes/admin/announcements'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedCreditsRouteImport } from './routes/_authenticated/credits'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
@@ -30,6 +44,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -39,10 +58,75 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPaymentsRoute = AdminPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPackagesRoute = AdminPackagesRouteImport.update({
+  id: '/packages',
+  path: '/packages',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminFlagsRoute = AdminFlagsRouteImport.update({
+  id: '/flags',
+  path: '/flags',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminFaqsRoute = AdminFaqsRouteImport.update({
+  id: '/faqs',
+  path: '/faqs',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBroadcastRoute = AdminBroadcastRouteImport.update({
+  id: '/broadcast',
+  path: '/broadcast',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminBlogRoute = AdminBlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminAnnouncementsRoute = AdminAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -72,12 +156,26 @@ const AuthenticatedChatChatIdRoute = AuthenticatedChatChatIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/credits': typeof AuthenticatedCreditsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/blog': typeof AdminBlogRoute
+  '/admin/broadcast': typeof AdminBroadcastRoute
+  '/admin/faqs': typeof AdminFaqsRoute
+  '/admin/flags': typeof AdminFlagsRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/packages': typeof AdminPackagesRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/users': typeof AdminUsersRoute
   '/api/chat': typeof ApiChatRoute
+  '/admin/': typeof AdminIndexRoute
   '/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
 }
@@ -87,7 +185,20 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/credits': typeof AuthenticatedCreditsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/blog': typeof AdminBlogRoute
+  '/admin/broadcast': typeof AdminBroadcastRoute
+  '/admin/faqs': typeof AdminFaqsRoute
+  '/admin/flags': typeof AdminFlagsRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/packages': typeof AdminPackagesRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/users': typeof AdminUsersRoute
   '/api/chat': typeof ApiChatRoute
+  '/admin': typeof AdminIndexRoute
   '/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/chat': typeof AuthenticatedChatIndexRoute
 }
@@ -95,12 +206,26 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/credits': typeof AuthenticatedCreditsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/admin/announcements': typeof AdminAnnouncementsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/blog': typeof AdminBlogRoute
+  '/admin/broadcast': typeof AdminBroadcastRoute
+  '/admin/faqs': typeof AdminFaqsRoute
+  '/admin/flags': typeof AdminFlagsRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/packages': typeof AdminPackagesRoute
+  '/admin/payments': typeof AdminPaymentsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
+  '/admin/users': typeof AdminUsersRoute
   '/api/chat': typeof ApiChatRoute
+  '/admin/': typeof AdminIndexRoute
   '/_authenticated/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
 }
@@ -108,12 +233,26 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/auth'
     | '/reset-password'
     | '/chat'
     | '/credits'
     | '/settings'
+    | '/admin/announcements'
+    | '/admin/audit'
+    | '/admin/blog'
+    | '/admin/broadcast'
+    | '/admin/faqs'
+    | '/admin/flags'
+    | '/admin/login'
+    | '/admin/packages'
+    | '/admin/payments'
+    | '/admin/settings'
+    | '/admin/support'
+    | '/admin/users'
     | '/api/chat'
+    | '/admin/'
     | '/chat/$chatId'
     | '/chat/'
   fileRoutesByTo: FileRoutesByTo
@@ -123,19 +262,46 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/credits'
     | '/settings'
+    | '/admin/announcements'
+    | '/admin/audit'
+    | '/admin/blog'
+    | '/admin/broadcast'
+    | '/admin/faqs'
+    | '/admin/flags'
+    | '/admin/login'
+    | '/admin/packages'
+    | '/admin/payments'
+    | '/admin/settings'
+    | '/admin/support'
+    | '/admin/users'
     | '/api/chat'
+    | '/admin'
     | '/chat/$chatId'
     | '/chat'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/admin'
     | '/auth'
     | '/reset-password'
     | '/_authenticated/chat'
     | '/_authenticated/credits'
     | '/_authenticated/settings'
+    | '/admin/announcements'
+    | '/admin/audit'
+    | '/admin/blog'
+    | '/admin/broadcast'
+    | '/admin/faqs'
+    | '/admin/flags'
+    | '/admin/login'
+    | '/admin/packages'
+    | '/admin/payments'
+    | '/admin/settings'
+    | '/admin/support'
+    | '/admin/users'
     | '/api/chat'
+    | '/admin/'
     | '/_authenticated/chat/$chatId'
     | '/_authenticated/chat/'
   fileRoutesById: FileRoutesById
@@ -143,6 +309,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -164,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -178,12 +352,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/payments': {
+      id: '/admin/payments'
+      path: '/payments'
+      fullPath: '/admin/payments'
+      preLoaderRoute: typeof AdminPaymentsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/packages': {
+      id: '/admin/packages'
+      path: '/packages'
+      fullPath: '/admin/packages'
+      preLoaderRoute: typeof AdminPackagesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/flags': {
+      id: '/admin/flags'
+      path: '/flags'
+      fullPath: '/admin/flags'
+      preLoaderRoute: typeof AdminFlagsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/faqs': {
+      id: '/admin/faqs'
+      path: '/faqs'
+      fullPath: '/admin/faqs'
+      preLoaderRoute: typeof AdminFaqsRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/broadcast': {
+      id: '/admin/broadcast'
+      path: '/broadcast'
+      fullPath: '/admin/broadcast'
+      preLoaderRoute: typeof AdminBroadcastRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/blog': {
+      id: '/admin/blog'
+      path: '/blog'
+      fullPath: '/admin/blog'
+      preLoaderRoute: typeof AdminBlogRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/announcements': {
+      id: '/admin/announcements'
+      path: '/announcements'
+      fullPath: '/admin/announcements'
+      preLoaderRoute: typeof AdminAnnouncementsRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -251,9 +516,46 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AdminRouteRouteChildren {
+  AdminAnnouncementsRoute: typeof AdminAnnouncementsRoute
+  AdminAuditRoute: typeof AdminAuditRoute
+  AdminBlogRoute: typeof AdminBlogRoute
+  AdminBroadcastRoute: typeof AdminBroadcastRoute
+  AdminFaqsRoute: typeof AdminFaqsRoute
+  AdminFlagsRoute: typeof AdminFlagsRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminPackagesRoute: typeof AdminPackagesRoute
+  AdminPaymentsRoute: typeof AdminPaymentsRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSupportRoute: typeof AdminSupportRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminAnnouncementsRoute: AdminAnnouncementsRoute,
+  AdminAuditRoute: AdminAuditRoute,
+  AdminBlogRoute: AdminBlogRoute,
+  AdminBroadcastRoute: AdminBroadcastRoute,
+  AdminFaqsRoute: AdminFaqsRoute,
+  AdminFlagsRoute: AdminFlagsRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminPackagesRoute: AdminPackagesRoute,
+  AdminPaymentsRoute: AdminPaymentsRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminSupportRoute: AdminSupportRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiChatRoute: ApiChatRoute,
@@ -261,13 +563,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
