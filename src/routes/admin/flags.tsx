@@ -16,7 +16,8 @@ export const Route = createFileRoute("/admin/flags")({
 
 function Page() {
   const qc = useQueryClient();
-  const list = useQuery({ queryKey: ["admin", "flags"], queryFn: () => useServerFn(listFlags)() });
+  const listFlagsFn = useServerFn(listFlags);
+  const list = useQuery({ queryKey: ["admin", "flags"], queryFn: () => listFlagsFn() });
   const upFn = useServerFn(upsertFlag);
   const [nk, setNk] = useState(""); const [nd, setNd] = useState("");
 

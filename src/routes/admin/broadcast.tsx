@@ -19,7 +19,8 @@ export const Route = createFileRoute("/admin/broadcast")({
 
 function Page() {
   const qc = useQueryClient();
-  const list = useQuery({ queryKey: ["admin", "broadcasts"], queryFn: () => useServerFn(listBroadcasts)() });
+  const listBroadcastsFn = useServerFn(listBroadcasts);
+  const list = useQuery({ queryKey: ["admin", "broadcasts"], queryFn: () => listBroadcastsFn() });
   const sendFn = useServerFn(sendBroadcast);
   const [subject, setSubject] = useState(""); const [body, setBody] = useState(""); const [aud, setAud] = useState<"all" | "active" | "suspended">("active");
 

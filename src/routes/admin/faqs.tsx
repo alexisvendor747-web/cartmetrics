@@ -22,7 +22,8 @@ const empty: F = { question: "", answer: "", category: "general", sort_order: 0,
 
 function Page() {
   const qc = useQueryClient();
-  const list = useQuery({ queryKey: ["admin", "faqs"], queryFn: () => useServerFn(listFaqs)() });
+  const listFaqsFn = useServerFn(listFaqs);
+  const list = useQuery({ queryKey: ["admin", "faqs"], queryFn: () => listFaqsFn() });
   const upFn = useServerFn(upsertFaq);
   const delFn = useServerFn(deleteFaq);
   const [ed, setEd] = useState<F | null>(null);

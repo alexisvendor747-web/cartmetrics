@@ -10,7 +10,8 @@ export const Route = createFileRoute("/admin/audit")({
 });
 
 function Page() {
-  const list = useQuery({ queryKey: ["admin", "audit"], queryFn: () => useServerFn(listAuditLog)() });
+  const listAuditLogFn = useServerFn(listAuditLog);
+  const list = useQuery({ queryKey: ["admin", "audit"], queryFn: () => listAuditLogFn() });
 
   return (
     <div className="p-6 space-y-4">

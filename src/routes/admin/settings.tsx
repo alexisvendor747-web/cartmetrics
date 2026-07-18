@@ -18,7 +18,8 @@ export const Route = createFileRoute("/admin/settings")({
 
 function Page() {
   const qc = useQueryClient();
-  const list = useQuery({ queryKey: ["admin", "settings"], queryFn: () => useServerFn(listSettings)() });
+  const listSettingsFn = useServerFn(listSettings);
+  const list = useQuery({ queryKey: ["admin", "settings"], queryFn: () => listSettingsFn() });
   const upFn = useServerFn(updateSettings);
   const rotFn = useServerFn(adminRotatePasskey);
   const [drafts, setDrafts] = useState<Record<string, string>>({});

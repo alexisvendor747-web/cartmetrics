@@ -24,7 +24,8 @@ const empty: A = { title: "", body: "", severity: "info", active: true };
 
 function Page() {
   const qc = useQueryClient();
-  const list = useQuery({ queryKey: ["admin", "announcements"], queryFn: () => useServerFn(listAnnouncements)() });
+  const listAnnouncementsFn = useServerFn(listAnnouncements);
+  const list = useQuery({ queryKey: ["admin", "announcements"], queryFn: () => listAnnouncementsFn() });
   const upFn = useServerFn(upsertAnnouncement);
   const delFn = useServerFn(deleteAnnouncement);
   const [ed, setEd] = useState<A | null>(null);

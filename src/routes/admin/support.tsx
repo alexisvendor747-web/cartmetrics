@@ -16,7 +16,8 @@ export const Route = createFileRoute("/admin/support")({
 
 function Page() {
   const qc = useQueryClient();
-  const list = useQuery({ queryKey: ["admin", "tickets"], queryFn: () => useServerFn(listAllTickets)() });
+  const listAllTicketsFn = useServerFn(listAllTickets);
+  const list = useQuery({ queryKey: ["admin", "tickets"], queryFn: () => listAllTicketsFn() });
   const msgsFn = useServerFn(getTicketMessages);
   const replyFn = useServerFn(replyTicket);
   const [selected, setSelected] = useState<string | null>(null);

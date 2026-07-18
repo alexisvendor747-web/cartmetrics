@@ -23,7 +23,8 @@ const empty: B = { slug: "", title: "", excerpt: "", body_md: "", cover_url: "",
 
 function Page() {
   const qc = useQueryClient();
-  const list = useQuery({ queryKey: ["admin", "blog"], queryFn: () => useServerFn(listBlogPosts)() });
+  const listBlogPostsFn = useServerFn(listBlogPosts);
+  const list = useQuery({ queryKey: ["admin", "blog"], queryFn: () => listBlogPostsFn() });
   const upFn = useServerFn(upsertBlogPost);
   const delFn = useServerFn(deleteBlogPost);
   const [ed, setEd] = useState<B | null>(null);
