@@ -37,7 +37,7 @@ function CreditsPage() {
   const [amount, setAmount] = useState("");
   const [ref, setRef] = useState("");
   const [note, setNote] = useState("");
-  const [screenshot, setScreenshot] = useState<{ url: string; path: string } | null>(null);
+  const [screenshot, setScreenshot] = useState<{ url: string | null; path: string } | null>(null);
   const [uploading, setUploading] = useState(false);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
