@@ -88,10 +88,12 @@ export const updateProfile = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+import type { Json } from "@/integrations/supabase/types";
+
 export const getAppSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase.from("app_settings").select("key, value");
     if (error) throw new Error(error.message);
-    return (data ?? []) as { key: string; value: unknown }[];
+    return (data ?? []) as { key: string; value: Json }[];
   });
