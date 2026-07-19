@@ -8,6 +8,12 @@ const BodySchema = z.object({
   message: z.string().min(1).max(20000),
   model: z.string().min(1).max(80),
   history: z.array(z.object({ role: z.enum(["user", "assistant", "system"]), content: z.string() })).max(200),
+  attachments: z.array(z.object({
+    name: z.string().min(1).max(180),
+    mime: z.string().min(1).max(120),
+    size: z.number().int().min(1).max(20_000_000),
+    dataUrl: z.string().startsWith("data:").max(30_000_000),
+  })).max(10).optional().default([]),
 });
 
 const SYSTEM_PROMPT = `You are CartMetrics AI, a helpful, insightful, and creative assistant.
@@ -62,24 +68,39 @@ export const Route = createFileRoute("/api/chat")({
           return new Response(JSON.stringify({ error: "insufficient_credits" }), { status: 402, headers: { "content-type": "application/json" } });
         }
 
+        const attachmentSummary = body.attachments.length
+          ? `\n\nAttachments:\n${body.attachments.map((a) => `- ${a.name} (${a.mime}, ${Math.ceil(a.size / 1024)} KB)`).join("\n")}`
+          : "";
+        const savedUserContent = `${body.message}${attachmentSummary}`;
+
         // Save user message
         await supabaseAdmin.from("messages").insert({
-          chat_id: body.chatId, user_id: userId, role: "user", content: body.message, model: body.model,
+          chat_id: body.chatId, user_id: userId, role: "user", content: savedUserContent, model: body.model,
         });
 
         // Auto-title on first message
         if (chat.title === "New chat") {
-          const title = body.message.slice(0, 60).replace(/\s+/g, " ").trim() || "New chat";
+          const title = (body.message || body.attachments[0]?.name || "New chat").slice(0, 60).replace(/\s+/g, " ").trim() || "New chat";
           await supabaseAdmin.from("chats").update({ title, model: body.model }).eq("id", body.chatId);
         } else {
           await supabaseAdmin.from("chats").update({ updated_at: new Date().toISOString(), model: body.model }).eq("id", body.chatId);
         }
 
         // Call gateway
+        const userContent = body.attachments.length
+          ? [
+              { type: "text", text: body.message },
+              ...body.attachments.map((file) => file.mime.startsWith("image/")
+                ? ({ type: "image_url", image_url: { url: file.dataUrl } })
+                : ({ type: "file", file: { filename: file.name, file_data: file.dataUrl } })
+              ),
+            ]
+          : body.message;
+
         const messages = [
           { role: "system", content: SYSTEM_PROMPT },
           ...body.history.slice(-30),
-          { role: "user", content: body.message },
+          { role: "user", content: userContent },
         ];
 
         const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -91,6 +112,9 @@ export const Route = createFileRoute("/api/chat")({
         if (!upstream.ok || !upstream.body) {
           const errText = await upstream.text();
           console.error("gateway error", upstream.status, errText);
+          await supabaseAdmin.rpc("adjust_credits", {
+            _user_id: userId, _delta: modelConfig.cost, _reason: "chat_refund", _metadata: { model: body.model, chat_id: body.chatId },
+          });
           if (upstream.status === 429) return new Response(JSON.stringify({ error: "rate_limited" }), { status: 429, headers: { "content-type": "application/json" } });
           if (upstream.status === 402) return new Response(JSON.stringify({ error: "gateway_credits_exhausted" }), { status: 402, headers: { "content-type": "application/json" } });
           return new Response(JSON.stringify({ error: "upstream_error", detail: errText.slice(0, 300) }), { status: 502, headers: { "content-type": "application/json" } });
