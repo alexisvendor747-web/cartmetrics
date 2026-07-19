@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useNavigate, useParams, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listChats, createChat, renameChat, togglePin, deleteChat, getMyProfile, createSupportTicket, listMySupportTickets } from "@/lib/chats.functions";
