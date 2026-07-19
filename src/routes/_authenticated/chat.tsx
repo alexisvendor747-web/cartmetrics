@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Plus, Pin, PinOff, MoreHorizontal, Pencil, Trash2, Sparkles, Settings, CreditCard, LogOut, ShieldCheck, Menu, X, LifeBuoy, AlertTriangle } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -39,6 +39,7 @@ function ChatLayout() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportSubject, setSupportSubject] = useState("");
   const [supportBody, setSupportBody] = useState("");
+  const [lowCreditPrompted, setLowCreditPrompted] = useState(false);
 
   const chats = useQuery({ queryKey: ["chats"], queryFn: () => listFn() });
   const profile = useQuery({ queryKey: ["me"], queryFn: () => profileFn() });
@@ -83,6 +84,13 @@ function ChatLayout() {
   const pinned = filtered.filter((c) => c.pinned);
   const unpinned = filtered.filter((c) => !c.pinned);
 
+  useEffect(() => {
+    if (!lowCreditPrompted && typeof profile.data?.credits === "number" && profile.data.credits <= 20) {
+      toast.warning("Your credits are low. Buy more credits to keep chatting.");
+      setLowCreditPrompted(true);
+    }
+  }, [lowCreditPrompted, profile.data?.credits]);
+
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
@@ -109,6 +117,9 @@ function ChatLayout() {
           <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search chats" className="pl-8 h-9 bg-sidebar-accent border-sidebar-border" />
         </div>
+        <Button variant="ghost" onClick={() => setSupportOpen(true)} className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground">
+          <LifeBuoy className="h-4 w-4" /> Support
+        </Button>
       </div>
       <ScrollArea className="flex-1 px-2">
         {pinned.length > 0 && <ChatSection label="Pinned" items={pinned} pathname={pathname} onRename={(c) => { setRenameId(c.id); setRenameValue(c.title); }} onPin={(c) => pinMut.mutate({ id: c.id, pinned: !c.pinned })} onDelete={(c) => delMut.mutate(c.id)} onSelect={() => setMobileOpen(false)} />}

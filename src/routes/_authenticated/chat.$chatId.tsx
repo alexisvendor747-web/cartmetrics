@@ -157,7 +157,7 @@ function ChatView() {
       <div className="border-b border-border h-14 flex items-center px-4 gap-3">
         <div className="flex-1 truncate text-sm text-muted-foreground">Chat</div>
         <Select value={model} onValueChange={setModel}>
-          <SelectTrigger className="w-[220px] h-9"><SelectValue placeholder="Select model" /></SelectTrigger>
+          <SelectTrigger className="w-[min(55vw,220px)] h-9"><SelectValue placeholder="Select model" /></SelectTrigger>
           <SelectContent>
             {enabledModels.map((m) => (
               <SelectItem key={m.id} value={m.id}>
