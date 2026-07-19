@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ShieldCheck, Loader2 } from "lucide-react";
 
+const OWNER_EMAIL = "apraisesamuel@gmail.com";
+
 export const Route = createFileRoute("/admin/login")({
   head: () => ({ meta: [{ title: "Admin Sign-in — CartMetrics AI" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: AdminLogin,
@@ -42,7 +44,9 @@ function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const normalizedEmail = email.trim().toLowerCase();
+      if (normalizedEmail !== OWNER_EMAIL) throw new Error("This email is not authorized for admin access.");
+      const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (error) throw error;
       // check super admin
       const s = await statusFn();
