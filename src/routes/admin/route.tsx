@@ -6,7 +6,7 @@ import { adminSessionStatus, adminLock } from "@/lib/admin-auth.functions";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, CreditCard, Package, Megaphone, HelpCircle, Flag, Settings,
-  Mail, LifeBuoy, FileText, ScrollText, LogOut, ShieldCheck, Loader2,
+  Mail, LifeBuoy, FileText, ScrollText, LogOut, ShieldCheck, Loader2, Menu, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
