@@ -2,7 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-async function requireSuperAdmin(context: { supabase: any; userId: string }) {
+const OWNER_EMAIL = "apraisesamuel@gmail.com";
+
+async function requireSuperAdmin(context: { supabase: any; userId: string; claims?: Record<string, unknown> }) {
+  let email = typeof context.claims?.email === "string" ? context.claims.email.toLowerCase() : "";
+  if (!email) {
+    const { data } = await context.supabase.from("profiles").select("email").eq("id", context.userId).single();
+    email = typeof data?.email === "string" ? data.email.toLowerCase() : "";
+  }
+  if (email !== OWNER_EMAIL) throw new Error("Forbidden");
   const { data: ok } = await context.supabase.rpc("has_role", {
     _user_id: context.userId,
     _role: "super_admin",

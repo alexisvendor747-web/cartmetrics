@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 import { z } from "zod";
 
 export const listChats = createServerFn({ method: "GET" })
@@ -71,7 +72,9 @@ export const getMyProfile = createServerFn({ method: "GET" })
       .eq("id", context.userId).single();
     if (error) throw new Error(error.message);
     const { data: roles } = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId);
-    return { ...data, is_admin: roles?.some((r) => r.role === "admin") ?? false };
+    const isSuperAdmin = roles?.some((r) => r.role === "super_admin") ?? false;
+    const isAdmin = roles?.some((r) => r.role === "admin") ?? false;
+    return { ...data, is_admin: isAdmin || isSuperAdmin, is_super_admin: isSuperAdmin };
   });
 
 export const updateProfile = createServerFn({ method: "POST" })
@@ -88,7 +91,39 @@ export const updateProfile = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-import type { Json } from "@/integrations/supabase/types";
+export const createSupportTicket = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    subject: z.string().trim().min(3).max(160),
+    body: z.string().trim().min(10).max(4000),
+    priority: z.enum(["low", "normal", "high", "urgent"]).default("normal"),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { data: ticket, error } = await context.supabase
+      .from("support_tickets")
+      .insert({ user_id: context.userId, subject: data.subject, priority: data.priority })
+      .select("id, subject, status, priority, created_at, updated_at")
+      .single();
+    if (error) throw new Error(error.message);
+    const { error: messageError } = await context.supabase
+      .from("support_ticket_messages")
+      .insert({ ticket_id: ticket.id, author_id: context.userId, is_staff: false, body: data.body });
+    if (messageError) throw new Error(messageError.message);
+    return ticket;
+  });
+
+export const listMySupportTickets = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("support_tickets")
+      .select("id, subject, status, priority, created_at, updated_at")
+      .eq("user_id", context.userId)
+      .order("updated_at", { ascending: false })
+      .limit(10);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
 
 export const getAppSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

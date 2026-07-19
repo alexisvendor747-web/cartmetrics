@@ -3,6 +3,15 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { createHash, timingSafeEqual } from "node:crypto";
 
+const OWNER_EMAIL = "apraisesamuel@gmail.com";
+
+async function getContextEmail(context: { claims?: Record<string, unknown>; supabase: any; userId: string }) {
+  const claimEmail = typeof context.claims?.email === "string" ? context.claims.email.toLowerCase() : "";
+  if (claimEmail) return claimEmail;
+  const { data } = await context.supabase.from("profiles").select("email").eq("id", context.userId).single();
+  return typeof data?.email === "string" ? data.email.toLowerCase() : "";
+}
+
 function passkeyMatches(input: string, expectedHex: string): boolean {
   const inputHash = createHash("sha256").update(input, "utf8").digest();
   const expected = Buffer.from(expectedHex, "hex");
@@ -14,6 +23,8 @@ export const adminUnlock = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ passkey: z.string().min(1).max(200) }).parse(d))
   .handler(async ({ context, data }) => {
+    const email = await getContextEmail(context);
+    if (email !== OWNER_EMAIL) throw new Error("Not authorized");
     // 1. verify user is super_admin
     const { data: isSuper } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
@@ -56,6 +67,7 @@ export const adminLock = createServerFn({ method: "POST" }).handler(async () => 
 export const adminSessionStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const email = await getContextEmail(context);
     const { data: isSuper } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
       _role: "super_admin",
@@ -66,7 +78,8 @@ export const adminSessionStatus = createServerFn({ method: "GET" })
       !!session.data.userId &&
       session.data.userId === context.userId &&
       (Date.now() - (session.data.unlockedAt ?? 0)) < 8 * 60 * 60 * 1000;
-    return { isSuperAdmin: !!isSuper, unlocked };
+    const ownerAllowed = email === OWNER_EMAIL && !!isSuper;
+    return { isSuperAdmin: ownerAllowed, unlocked: ownerAllowed && unlocked };
   });
 
 export const adminRotatePasskey = createServerFn({ method: "POST" })
@@ -75,6 +88,8 @@ export const adminRotatePasskey = createServerFn({ method: "POST" })
     z.object({ current: z.string().min(1), next: z.string().min(8).max(200) }).parse(d),
   )
   .handler(async ({ context, data }) => {
+    const email = await getContextEmail(context);
+    if (email !== OWNER_EMAIL) throw new Error("Not authorized");
     const { data: isSuper } = await context.supabase.rpc("has_role", {
       _user_id: context.userId,
       _role: "super_admin",

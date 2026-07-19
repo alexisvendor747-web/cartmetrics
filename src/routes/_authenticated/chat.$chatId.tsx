@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Send, RefreshCw, Sparkles, User, Loader2 } from "lucide-react";
+import { Send, RefreshCw, Sparkles, User, Loader2, Paperclip, X, FileText, Image as ImageIcon, Video } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/chat/$chatId")({
 });
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; model?: string | null; created_at?: string; streaming?: boolean };
+type Attachment = { id: string; name: string; mime: string; size: number; dataUrl: string };
 
 function ChatView() {
   const { chatId } = Route.useParams();
@@ -38,24 +39,47 @@ function ChatView() {
   }, [enabledModels, profileQuery.data, model]);
 
   const [input, setInput] = useState("");
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [live, setLive] = useState<Msg[]>([]);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setLive([]); setInput(""); }, [chatId]);
+  useEffect(() => { setLive([]); setInput(""); setAttachments([]); }, [chatId]);
   useEffect(() => {
     if (scrollerRef.current) scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
   }, [messagesQuery.data, live, streaming]);
 
   const messages: Msg[] = [...(messagesQuery.data ?? []) as Msg[], ...live];
 
+  async function onFilesSelected(files: FileList | null) {
+    if (!files?.length || streaming) return;
+    const incoming = Array.from(files).slice(0, Math.max(0, 10 - attachments.length));
+    if (attachments.length + files.length > 10) toast.error("You can attach up to 10 files per message.");
+    const accepted: Attachment[] = [];
+    for (const file of incoming) {
+      if (file.size > 20_000_000) {
+        toast.error(`${file.name} is larger than 20MB.`);
+        continue;
+      }
+      const mime = file.type || inferMime(file.name);
+      const dataUrl = await readFileAsDataUrl(file, mime);
+      accepted.push({ id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`, name: file.name, mime, size: file.size, dataUrl });
+    }
+    if (accepted.length) setAttachments((prev) => [...prev, ...accepted].slice(0, 10));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
   async function send(prompt?: string) {
-    const text = (prompt ?? input).trim();
-    if (!text || streaming || !model) return;
+    const outgoingAttachments = prompt ? [] : attachments;
+    const text = (prompt ?? input).trim() || (outgoingAttachments.length ? "Please analyze the attached file(s)." : "");
+    if ((!text && !outgoingAttachments.length) || streaming || !model) return;
     setInput("");
+    setAttachments([]);
     setStreaming(true);
 
-    const userMsg: Msg = { id: `u-${Date.now()}`, role: "user", content: text };
+    const attachmentText = outgoingAttachments.length ? `\n\nAttachments:\n${outgoingAttachments.map((a) => `- ${a.name} (${formatBytes(a.size)})`).join("\n")}` : "";
+    const userMsg: Msg = { id: `u-${Date.now()}`, role: "user", content: `${text}${attachmentText}` };
     const assistantMsg: Msg = { id: `a-${Date.now()}`, role: "assistant", content: "", model, streaming: true };
     setLive((prev) => [...prev, userMsg, assistantMsg]);
 
@@ -71,7 +95,7 @@ function ChatView() {
       const resp = await fetch("/api/chat", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-        body: JSON.stringify({ chatId, message: text, model, history }),
+        body: JSON.stringify({ chatId, message: text, model, history, attachments: outgoingAttachments.map(({ name, mime, size, dataUrl }) => ({ name, mime, size, dataUrl })) }),
       });
 
       if (!resp.ok || !resp.body) {
@@ -82,6 +106,7 @@ function ChatView() {
         else toast.error(err.error ?? "Something went wrong");
         setLive((prev) => prev.filter((m) => !m.streaming));
         setInput(text);
+        setAttachments(outgoingAttachments);
         return;
       }
 
@@ -104,6 +129,8 @@ function ChatView() {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "Stream error");
       setLive((prev) => prev.filter((m) => !m.streaming));
+      setInput(text);
+      setAttachments(outgoingAttachments);
     } finally {
       setStreaming(false);
     }
@@ -130,7 +157,7 @@ function ChatView() {
       <div className="border-b border-border h-14 flex items-center px-4 gap-3">
         <div className="flex-1 truncate text-sm text-muted-foreground">Chat</div>
         <Select value={model} onValueChange={setModel}>
-          <SelectTrigger className="w-[220px] h-9"><SelectValue placeholder="Select model" /></SelectTrigger>
+          <SelectTrigger className="w-[min(55vw,220px)] h-9"><SelectValue placeholder="Select model" /></SelectTrigger>
           <SelectContent>
             {enabledModels.map((m) => (
               <SelectItem key={m.id} value={m.id}>
@@ -159,26 +186,55 @@ function ChatView() {
 
       <div className="border-t border-border px-4 py-4">
         <div className="max-w-3xl mx-auto">
-          <div className="glass rounded-2xl p-2 flex items-end gap-2">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
-              }}
-              placeholder="Message CartMetrics AI…"
-              rows={1}
-              className="flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 max-h-40 min-h-[36px] py-2"
-              maxLength={20000}
-              disabled={streaming}
-            />
-            <div className="flex gap-1">
-              {messages.some((m) => m.role === "assistant" && !m.streaming) && !streaming && (
-                <Button size="icon" variant="ghost" onClick={regenerate} title="Regenerate"><RefreshCw className="h-4 w-4" /></Button>
-              )}
-              <Button size="icon" onClick={() => send()} disabled={!input.trim() || streaming} className="bg-gradient-to-r from-amber-400 to-orange-500 text-background border-0">
-                {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          <div className="glass rounded-2xl p-2">
+            {attachments.length > 0 && (
+              <div className="flex flex-wrap gap-2 px-1 pb-2">
+                {attachments.map((file) => (
+                  <div key={file.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border bg-background/50 px-2 py-1.5 text-xs max-w-full sm:max-w-[240px]">
+                    <AttachmentIcon mime={file.mime} />
+                    <div className="min-w-0">
+                      <div className="truncate font-medium">{file.name}</div>
+                      <div className="text-muted-foreground">{formatBytes(file.size)}</div>
+                    </div>
+                    <button type="button" className="rounded p-1 hover:bg-accent" onClick={() => setAttachments((prev) => prev.filter((a) => a.id !== file.id))} aria-label={`Remove ${file.name}`}>
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-end gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                accept="image/*,video/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.json"
+                onChange={(e) => void onFilesSelected(e.target.files)}
+              />
+              <Button size="icon" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={streaming || attachments.length >= 10} title="Attach files">
+                <Paperclip className="h-4 w-4" />
               </Button>
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+                }}
+                placeholder="Message CartMetrics AI…"
+                rows={1}
+                className="flex-1 resize-none border-0 bg-transparent focus-visible:ring-0 max-h-40 min-h-[36px] py-2"
+                maxLength={20000}
+                disabled={streaming}
+              />
+              <div className="flex gap-1">
+                {messages.some((m) => m.role === "assistant" && !m.streaming) && !streaming && (
+                  <Button size="icon" variant="ghost" onClick={regenerate} title="Regenerate"><RefreshCw className="h-4 w-4" /></Button>
+                )}
+                <Button size="icon" onClick={() => send()} disabled={(!input.trim() && attachments.length === 0) || streaming} className="bg-gradient-to-r from-amber-400 to-orange-500 text-background border-0">
+                  {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
           </div>
           <div className="mt-2 text-xs text-muted-foreground text-center">
@@ -188,6 +244,46 @@ function ChatView() {
       </div>
     </div>
   );
+}
+
+function inferMime(name: string) {
+  const ext = name.split(".").pop()?.toLowerCase();
+  const map: Record<string, string> = {
+    pdf: "application/pdf",
+    doc: "application/msword",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    xls: "application/vnd.ms-excel",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    csv: "text/csv",
+    txt: "text/plain",
+    md: "text/markdown",
+    json: "application/json",
+  };
+  return map[ext ?? ""] ?? "application/octet-stream";
+}
+
+function readFileAsDataUrl(file: File, mime: string) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result);
+      resolve(result.startsWith("data:;") ? result.replace("data:;", `data:${mime};`) : result);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function AttachmentIcon({ mime }: { mime: string }) {
+  if (mime.startsWith("image/")) return <ImageIcon className="h-4 w-4 text-primary" />;
+  if (mime.startsWith("video/")) return <Video className="h-4 w-4 text-primary" />;
+  return <FileText className="h-4 w-4 text-primary" />;
 }
 
 function MessageBubble({ msg }: { msg: Msg }) {

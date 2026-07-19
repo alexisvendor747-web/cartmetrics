@@ -141,9 +141,13 @@ function CreditsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="rounded-lg bg-accent p-4 text-sm space-y-1">
-            <div><span className="text-muted-foreground">Bank:</span> CartMetrics AI Ltd.</div>
-            <div><span className="text-muted-foreground">Account:</span> 0021 4453 8891 0022</div>
-            <div><span className="text-muted-foreground">Ref:</span> your account email</div>
+            <div><span className="text-muted-foreground">Account name:</span> Grace Adeyemi</div>
+            <div><span className="text-muted-foreground">Bank name:</span> Lead Bank</div>
+            <div><span className="text-muted-foreground">Account number:</span> 215230013480</div>
+            <div><span className="text-muted-foreground">Routing number:</span> 101019644</div>
+            <div><span className="text-muted-foreground">Account type:</span> Checking</div>
+            <div><span className="text-muted-foreground">Bank address:</span> 1801 Main St. Kansas City, MO 64108, USA</div>
+            <div><span className="text-muted-foreground">Reference ID:</span> B8DF96F85</div>
           </div>
           <div className="space-y-3">
             <div><Label>Your bank</Label><Input value={bank} onChange={(e) => setBank(e.target.value)} maxLength={120} placeholder="e.g. Chase" /></div>
