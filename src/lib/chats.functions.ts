@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 import { z } from "zod";
 
 export const listChats = createServerFn({ method: "GET" })
@@ -123,8 +124,6 @@ export const listMySupportTickets = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return data ?? [];
   });
-
-import type { Json } from "@/integrations/supabase/types";
 
 export const getAppSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
