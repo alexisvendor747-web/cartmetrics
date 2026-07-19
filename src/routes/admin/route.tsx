@@ -10,11 +10,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
+    if (location.pathname === "/admin/login") return;
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/admin/login" });
   },
@@ -43,12 +44,26 @@ function AdminLayout() {
   const lockFn = useServerFn(adminLock);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isLoginRoute = pathname === "/admin/login";
 
   const status = useQuery({
     queryKey: ["admin", "status"],
     queryFn: () => statusFn(),
     refetchInterval: 5 * 60 * 1000,
+    enabled: !isLoginRoute,
   });
+
+  useEffect(() => {
+    if (!status.data || isLoginRoute) return;
+    if (!status.data.isSuperAdmin) {
+      void supabase.auth.signOut();
+      navigate({ to: "/" });
+    } else if (!status.data.unlocked) {
+      navigate({ to: "/admin/login" });
+    }
+  }, [isLoginRoute, navigate, status.data]);
+
+  if (isLoginRoute) return <Outlet />;
 
   if (status.isLoading) {
     return (
@@ -59,14 +74,10 @@ function AdminLayout() {
   }
 
   if (status.data && !status.data.isSuperAdmin) {
-    // Not a super admin → send home
-    void supabase.auth.signOut();
-    navigate({ to: "/" });
     return null;
   }
 
   if (status.data && !status.data.unlocked) {
-    navigate({ to: "/admin/login" });
     return null;
   }
 
