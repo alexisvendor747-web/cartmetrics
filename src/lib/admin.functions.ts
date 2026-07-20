@@ -512,11 +512,26 @@ export const listAllTickets = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("support_tickets")
-      .select("*, profiles!inner(email, display_name)")
+      .select("id, user_id, subject, status, priority, created_at, updated_at")
       .order("updated_at", { ascending: false })
       .limit(200);
     if (error) throw new Error(error.message);
-    return data ?? [];
+    const userIds = Array.from(new Set((data ?? []).map((ticket) => ticket.user_id).filter(Boolean)));
+    const profileMap = new Map<string, { email: string | null; display_name: string | null }>();
+    if (userIds.length) {
+      const { data: profiles, error: profileError } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email, display_name")
+        .in("id", userIds);
+      if (profileError) throw new Error(profileError.message);
+      for (const profile of profiles ?? []) {
+        profileMap.set(profile.id, { email: profile.email, display_name: profile.display_name });
+      }
+    }
+    return (data ?? []).map((ticket) => ({
+      ...ticket,
+      profiles: profileMap.get(ticket.user_id) ?? { email: null, display_name: null },
+    }));
   });
 
 export const getTicketMessages = createServerFn({ method: "GET" })
@@ -548,11 +563,13 @@ export const replyTicket = createServerFn({ method: "POST" })
     await requireSuperAdmin(context);
     await requireAdminSession(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin
+    const { error: messageError } = await supabaseAdmin
       .from("support_ticket_messages")
       .insert({ ticket_id: data.id, author_id: context.userId, is_staff: true, body: data.body } as never);
+    if (messageError) throw new Error(messageError.message);
     if (data.new_status) {
-      await supabaseAdmin.from("support_tickets").update({ status: data.new_status } as never).eq("id", data.id);
+      const { error: ticketError } = await supabaseAdmin.from("support_tickets").update({ status: data.new_status } as never).eq("id", data.id);
+      if (ticketError) throw new Error(ticketError.message);
     }
     await audit(context.userId, "reply_ticket", "ticket", data.id, { status: data.new_status });
     return { ok: true };

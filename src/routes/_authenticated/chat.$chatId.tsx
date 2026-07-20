@@ -122,9 +122,16 @@ function ChatView() {
       setLive((prev) => prev.map((m) => m.id === assistantMsg.id ? { ...m, streaming: false } : m));
       qc.invalidateQueries({ queryKey: ["me"] });
       qc.invalidateQueries({ queryKey: ["chats"] });
-      // reload persisted messages, drop live buffer
+      // Reload persisted messages, but keep the streamed answer visible if the
+      // database refetch is delayed or persistence fails.
       await qc.invalidateQueries({ queryKey: ["messages", chatId] });
-      setLive([]);
+      const savedMessages = (qc.getQueryData(["messages", chatId]) ?? []) as Msg[];
+      const savedAssistant = savedMessages.some((m) => m.role === "assistant" && m.content.trim() === acc.trim());
+      if (savedAssistant) {
+        setLive([]);
+      } else {
+        toast.warning("Answer is still visible, but saving took longer than expected. Refresh before leaving this chat.");
+      }
     } catch (e) {
       console.error(e);
       toast.error(e instanceof Error ? e.message : "Stream error");
@@ -212,7 +219,7 @@ function ChatView() {
                 accept="image/*,video/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.md,.json"
                 onChange={(e) => void onFilesSelected(e.target.files)}
               />
-              <Button size="icon" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={streaming || attachments.length >= 10} title="Attach files">
+              <Button size="icon" variant="ghost" onClick={() => fileInputRef.current?.click()} disabled={streaming || attachments.length >= 10} title="Attach files" aria-label="Attach files">
                 <Paperclip className="h-4 w-4" />
               </Button>
               <Textarea
@@ -229,9 +236,9 @@ function ChatView() {
               />
               <div className="flex gap-1">
                 {messages.some((m) => m.role === "assistant" && !m.streaming) && !streaming && (
-                  <Button size="icon" variant="ghost" onClick={regenerate} title="Regenerate"><RefreshCw className="h-4 w-4" /></Button>
+                  <Button size="icon" variant="ghost" onClick={regenerate} title="Regenerate" aria-label="Regenerate response"><RefreshCw className="h-4 w-4" /></Button>
                 )}
-                <Button size="icon" onClick={() => send()} disabled={(!input.trim() && attachments.length === 0) || streaming} className="bg-gradient-to-r from-amber-400 to-orange-500 text-background border-0">
+                <Button size="icon" onClick={() => send()} disabled={(!input.trim() && attachments.length === 0) || streaming || !model} className="bg-gradient-to-r from-amber-400 to-orange-500 text-background border-0" aria-label="Send message">
                   {streaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </Button>
               </div>
