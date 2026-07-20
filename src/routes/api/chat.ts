@@ -152,13 +152,15 @@ export const Route = createFileRoute("/api/chat")({
                 }
               }
             } finally {
-              controller.close();
-              // Persist assistant message after stream completes
+              // Persist the assistant before closing the response so the client refetch
+              // cannot race ahead and clear the visible streamed reply.
               if (assistantText) {
-                await supabaseAdmin.from("messages").insert({
+                const { error } = await supabaseAdmin.from("messages").insert({
                   chat_id: body.chatId, user_id: userId, role: "assistant", content: assistantText, model: body.model,
                 });
+                if (error) console.error("assistant message persist failed", error.message);
               }
+              controller.close();
             }
           },
         });
