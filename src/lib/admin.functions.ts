@@ -249,12 +249,16 @@ const PackageSchema = z.object({
   description: z.string().max(500).nullable().optional(),
 });
 
-export const listPackages = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.from("credit_packages").select("*").order("sort_order");
-  if (error) throw new Error(error.message);
-  return data ?? [];
-});
+export const listPackages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireSuperAdmin(context);
+    await requireAdminSession(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("credit_packages").select("*").order("sort_order");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
 
 export const upsertPackage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
