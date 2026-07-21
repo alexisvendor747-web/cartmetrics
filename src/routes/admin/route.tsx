@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, Link, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { adminSessionStatus, adminLock } from "@/lib/admin-auth.functions";
 import { cn } from "@/lib/utils";
@@ -13,12 +13,25 @@ import { toast } from "sonner";
 import { useEffect, useState } from "react";
 
 function AdminErrorBoundary({ error, reset }: { error: Error; reset: () => void }) {
+  const navigate = useNavigate();
   const msg = error?.message ?? "";
   const locked = /session locked|Not authorized|Unauthorized/i.test(msg);
-  if (typeof window !== "undefined" && locked) {
-    window.location.replace("/admin/login");
-    return null;
+
+  useEffect(() => {
+    if (locked) {
+      reset();
+      void navigate({ to: "/admin/login", replace: true });
+    }
+  }, [locked, navigate, reset]);
+
+  if (locked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="max-w-md w-full rounded-xl border bg-card p-6 text-center space-y-3">
@@ -59,6 +72,7 @@ const NAV: NavItem[] = [
 
 function AdminLayout() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const statusFn = useServerFn(adminSessionStatus);
   const lockFn = useServerFn(adminLock);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -68,23 +82,32 @@ function AdminLayout() {
   const status = useQuery({
     queryKey: ["admin", "status"],
     queryFn: () => statusFn(),
-    refetchInterval: 5 * 60 * 1000,
+    retry: false,
+    refetchInterval: 30_000,
     enabled: !isLoginRoute,
   });
 
   useEffect(() => {
     if (!status.data || isLoginRoute) return;
     if (!status.data.isSuperAdmin) {
+      queryClient.removeQueries({ queryKey: ["admin"] });
       void supabase.auth.signOut();
-      navigate({ to: "/" });
+      navigate({ to: "/", replace: true });
     } else if (!status.data.unlocked) {
-      navigate({ to: "/admin/login" });
+      queryClient.removeQueries({ queryKey: ["admin"] });
+      navigate({ to: "/admin/login", replace: true });
     }
-  }, [isLoginRoute, navigate, status.data]);
+  }, [isLoginRoute, navigate, queryClient, status.data]);
+
+  useEffect(() => {
+    if (!status.error || isLoginRoute) return;
+    queryClient.removeQueries({ queryKey: ["admin"] });
+    navigate({ to: "/admin/login", replace: true });
+  }, [isLoginRoute, navigate, queryClient, status.error]);
 
   if (isLoginRoute) return <Outlet />;
 
-  if (status.isLoading) {
+  if (status.isLoading || status.isError || !status.data) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -102,10 +125,12 @@ function AdminLayout() {
 
   async function handleLock() {
     try {
+      await queryClient.cancelQueries({ queryKey: ["admin"] });
+      queryClient.removeQueries({ queryKey: ["admin"] });
       await lockFn();
       await supabase.auth.signOut();
       toast.success("Signed out");
-      navigate({ to: "/admin/login" });
+      navigate({ to: "/admin/login", replace: true });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Sign out failed");
     }
