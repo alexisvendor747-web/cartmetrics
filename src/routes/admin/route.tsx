@@ -6,7 +6,7 @@ import { adminSessionStatus, adminLock } from "@/lib/admin-auth.functions";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, CreditCard, Package, Megaphone, HelpCircle, Flag, Settings,
-  Mail, LifeBuoy, FileText, ScrollText, LogOut, ShieldCheck, Loader2, Menu, X,
+  Mail, LifeBuoy, FileText, ScrollText, LogOut, ShieldCheck, Loader2, Menu, X, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -61,6 +61,7 @@ const NAV: NavItem[] = [
   { to: "/admin/payments", label: "Payments", icon: CreditCard },
   { to: "/admin/packages", label: "Credit Packages", icon: Package },
   { to: "/admin/announcements", label: "Announcements", icon: Megaphone },
+  { to: "/admin/reviews", label: "Reviews", icon: Star },
   { to: "/admin/faqs", label: "FAQs", icon: HelpCircle },
   { to: "/admin/flags", label: "Feature Flags", icon: Flag },
   { to: "/admin/broadcast", label: "Broadcast Email", icon: Mail },
