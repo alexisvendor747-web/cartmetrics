@@ -1,9 +1,17 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArrowRight, Sparkles, Zap, Shield, Layers, Bot, Code2, PenLine, Search, Image as ImageIcon, MessageSquare, Star, CircleCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { listApprovedReviews, submitReview } from "@/lib/reviews.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -226,20 +234,12 @@ function Landing() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24 border-t border-border">
+      {/* Testimonials + Review submission */}
+      <section id="reviews" className="py-24 border-t border-border">
         <div className="mx-auto max-w-7xl px-6">
           <div className="text-sm text-primary">LOVED BY TEAMS</div>
           <h2 className="mt-3 font-display text-5xl">The AI upgrade you actually feel.</h2>
-          <div className="mt-14 grid md:grid-cols-3 gap-6">
-            {testimonials.map((t) => (
-              <Card key={t.who} className="p-6 bg-card">
-                <div className="flex text-amber-400 gap-0.5">{[...Array(5)].map((_,i)=> <Star key={i} className="h-4 w-4 fill-current" />)}</div>
-                <p className="mt-4 text-lg font-display italic">"{t.quote}"</p>
-                <div className="mt-4 text-sm text-muted-foreground">{t.who}</div>
-              </Card>
-            ))}
-          </div>
+          <ReviewsBlock fallback={testimonials} />
         </div>
       </section>
 
