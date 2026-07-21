@@ -460,6 +460,45 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          approved: boolean
+          author_email: string | null
+          author_name: string
+          comment: string
+          created_at: string
+          featured: boolean
+          id: string
+          rating: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          approved?: boolean
+          author_email?: string | null
+          author_name: string
+          comment: string
+          created_at?: string
+          featured?: boolean
+          id?: string
+          rating: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          approved?: boolean
+          author_email?: string | null
+          author_name?: string
+          comment?: string
+          created_at?: string
+          featured?: boolean
+          id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       support_ticket_messages: {
         Row: {
           author_id: string
