@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { adminUnlock, adminSessionStatus } from "@/lib/admin-auth.functions";
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/admin/login")({
 
 function AdminLogin() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const unlockFn = useServerFn(adminUnlock);
   const statusFn = useServerFn(adminSessionStatus);
   const [phase, setPhase] = useState<"credentials" | "passkey">("credentials");
@@ -33,7 +35,7 @@ function AdminLogin() {
       if (data.user) {
         try {
           const s = await statusFn();
-          if (s.isSuperAdmin && s.unlocked) navigate({ to: "/admin" });
+          if (s.isSuperAdmin && s.unlocked) navigate({ to: "/admin", replace: true });
           else if (s.isSuperAdmin) setPhase("passkey");
         } catch { /* ignore */ }
       }
@@ -46,6 +48,7 @@ function AdminLogin() {
     try {
       const normalizedEmail = email.trim().toLowerCase();
       if (normalizedEmail !== OWNER_EMAIL) throw new Error("This email is not authorized for admin access.");
+      queryClient.removeQueries({ queryKey: ["admin"] });
       const { error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (error) throw error;
       // check super admin
@@ -67,8 +70,9 @@ function AdminLogin() {
     setLoading(true);
     try {
       await unlockFn({ data: { passkey } });
+      queryClient.removeQueries({ queryKey: ["admin"] });
       toast.success("Admin session unlocked");
-      navigate({ to: "/admin" });
+      navigate({ to: "/admin", replace: true });
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Invalid passkey");
     } finally {
