@@ -125,10 +125,25 @@ export const listMySupportTickets = createServerFn({ method: "GET" })
     return data ?? [];
   });
 
+// Allow-list of keys safe to expose to authenticated end-users.
+// Never include secret keys such as `admin_passkey_sha256`.
+const PUBLIC_APP_SETTING_KEYS = [
+  "enabled_models",
+  "default_model",
+  "bank_details",
+  "support_email",
+  "announcement_banner",
+  "brand",
+  "pricing_note",
+] as const;
+
 export const getAppSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.from("app_settings").select("key, value");
+    const { data, error } = await context.supabase
+      .from("app_settings")
+      .select("key, value")
+      .in("key", PUBLIC_APP_SETTING_KEYS as unknown as string[]);
     if (error) throw new Error(error.message);
     return (data ?? []) as { key: string; value: Json }[];
   });

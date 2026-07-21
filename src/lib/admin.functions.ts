@@ -249,12 +249,16 @@ const PackageSchema = z.object({
   description: z.string().max(500).nullable().optional(),
 });
 
-export const listPackages = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.from("credit_packages").select("*").order("sort_order");
-  if (error) throw new Error(error.message);
-  return data ?? [];
-});
+export const listPackages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireSuperAdmin(context);
+    await requireAdminSession(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("credit_packages").select("*").order("sort_order");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
 
 export const upsertPackage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -292,12 +296,16 @@ const AnnouncementSchema = z.object({
   active: z.boolean().default(true),
 });
 
-export const listAnnouncements = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.from("announcements").select("*").order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return data ?? [];
-});
+export const listAnnouncements = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireSuperAdmin(context);
+    await requireAdminSession(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("announcements").select("*").order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
 
 export const upsertAnnouncement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -337,12 +345,16 @@ const FaqSchema = z.object({
   published: z.boolean().default(true),
 });
 
-export const listFaqs = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.from("faqs").select("*").order("category").order("sort_order");
-  if (error) throw new Error(error.message);
-  return data ?? [];
-});
+export const listFaqs = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireSuperAdmin(context);
+    await requireAdminSession(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.from("faqs").select("*").order("category").order("sort_order");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
 
 export const upsertFaq = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
