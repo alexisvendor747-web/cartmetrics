@@ -18,13 +18,18 @@ async function requireSuperAdmin(context: { supabase: any; userId: string; claim
   if (!ok) throw new Error("Forbidden");
 }
 
-async function requireAdminSession(context: { userId: string }) {
+async function isAdminSessionUnlocked(context: { userId: string }) {
   const { getAdminSession } = await import("./admin-session.server");
   const s = await getAdminSession();
-  const unlocked =
+  return (
     !!s.data.userId &&
     s.data.userId === context.userId &&
-    (Date.now() - (s.data.unlockedAt ?? 0)) < 8 * 60 * 60 * 1000;
+    (Date.now() - (s.data.unlockedAt ?? 0)) < 8 * 60 * 60 * 1000
+  );
+}
+
+async function requireAdminSession(context: { userId: string }) {
+  const unlocked = await isAdminSessionUnlocked(context);
   if (!unlocked) throw new Error("Admin session locked. Enter passkey.");
 }
 
@@ -45,7 +50,9 @@ export const adminStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await requireSuperAdmin(context);
-    await requireAdminSession(context);
+    if (!(await isAdminSessionUnlocked(context))) {
+      return { locked: true as const };
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [users, chats, messages, pendingPay, txns, payments] = await Promise.all([
       supabaseAdmin.from("profiles").select("id, credits, created_at, status"),
@@ -62,6 +69,7 @@ export const adminStats = createServerFn({ method: "GET" })
       if (m.model) modelCounts[m.model] = (modelCounts[m.model] ?? 0) + 1;
     }
     return {
+      locked: false as const,
       totalUsers: users.data?.length ?? 0,
       suspendedUsers: (users.data ?? []).filter((u) => u.status === "suspended").length,
       newUsers24h: (users.data ?? []).filter((u) => new Date(u.created_at).getTime() > dayAgo).length,
