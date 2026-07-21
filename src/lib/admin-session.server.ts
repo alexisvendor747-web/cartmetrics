@@ -14,7 +14,9 @@ export function getAdminSessionConfig() {
     cookie: {
       httpOnly: true,
       secure: true,
-      sameSite: "lax" as const,
+      // SameSite=None so the admin session cookie is sent when the app
+      // is loaded inside the Lovable editor preview iframe.
+      sameSite: "none" as const,
       path: "/",
     },
   };
