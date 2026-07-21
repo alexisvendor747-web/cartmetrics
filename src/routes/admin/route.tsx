@@ -12,6 +12,24 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 
+function AdminErrorBoundary({ error, reset }: { error: Error; reset: () => void }) {
+  const msg = error?.message ?? "";
+  const locked = /session locked|Not authorized|Unauthorized/i.test(msg);
+  if (typeof window !== "undefined" && locked) {
+    window.location.replace("/admin/login");
+    return null;
+  }
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="max-w-md w-full rounded-xl border bg-card p-6 text-center space-y-3">
+        <div className="text-sm font-medium">Something went wrong</div>
+        <div className="text-xs text-muted-foreground break-words">{msg || "Unknown error"}</div>
+        <Button size="sm" onClick={reset}>Retry</Button>
+      </div>
+    </div>
+  );
+}
+
 export const Route = createFileRoute("/admin")({
   ssr: false,
   beforeLoad: async ({ location }) => {
@@ -20,6 +38,7 @@ export const Route = createFileRoute("/admin")({
     if (!data.user) throw redirect({ to: "/admin/login" });
   },
   component: AdminLayout,
+  errorComponent: AdminErrorBoundary,
 });
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean };
