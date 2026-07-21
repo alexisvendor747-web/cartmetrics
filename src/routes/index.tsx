@@ -316,3 +316,94 @@ function Landing() {
     </div>
   );
 }
+
+function ReviewsBlock({ fallback }: { fallback: { quote: string; who: string }[] }) {
+  const qc = useQueryClient();
+  const listFn = useServerFn(listApprovedReviews);
+  const submitFn = useServerFn(submitReview);
+  const reviewsQuery = useQuery({ queryKey: ["public-reviews"], queryFn: () => listFn() });
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const mut = useMutation({
+    mutationFn: (payload: { author_name: string; author_email?: string; rating: number; comment: string }) =>
+      submitFn({ data: payload }),
+    onSuccess: () => {
+      toast.success("Thanks! Your review will appear after a quick review.");
+      setName(""); setEmail(""); setRating(5); setComment("");
+      qc.invalidateQueries({ queryKey: ["public-reviews"] });
+    },
+    onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Could not submit review"),
+  });
+  const reviews = reviewsQuery.data ?? [];
+  const items = reviews.length > 0
+    ? reviews.map((r) => ({ quote: r.comment, who: r.author_name, rating: r.rating }))
+    : fallback.map((t) => ({ quote: t.quote, who: t.who, rating: 5 }));
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || comment.trim().length < 3) return;
+    mut.mutate({ author_name: name.trim(), author_email: email.trim() || undefined, rating, comment: comment.trim() });
+  }
+
+  return (
+    <>
+      <div className="mt-14 grid md:grid-cols-3 gap-6">
+        {items.slice(0, 9).map((t, i) => (
+          <Card key={`${t.who}-${i}`} className="p-6 bg-card">
+            <div className="flex text-amber-400 gap-0.5">
+              {[...Array(5)].map((_, j) => (
+                <Star key={j} className={`h-4 w-4 ${j < t.rating ? "fill-current" : "opacity-30"}`} />
+              ))}
+            </div>
+            <p className="mt-4 text-lg font-display italic">"{t.quote}"</p>
+            <div className="mt-4 text-sm text-muted-foreground">{t.who}</div>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="mt-14 p-6 md:p-8 bg-card">
+        <div className="max-w-2xl">
+          <h3 className="font-display text-2xl">Leave a review</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Tell us how CartMetrics AI is working for you. Approved reviews appear here.</p>
+        </div>
+        <form onSubmit={onSubmit} className="mt-6 grid md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="rv-name">Your name</Label>
+            <Input id="rv-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="rv-email">Email (optional)</Label>
+            <Input id="rv-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={200} />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label>Rating</Label>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setRating(n)}
+                  aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                  className="p-1"
+                >
+                  <Star className={`h-6 w-6 ${n <= rating ? "text-amber-400 fill-current" : "text-muted-foreground"}`} />
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="rv-comment">Your review</Label>
+            <Textarea id="rv-comment" value={comment} onChange={(e) => setComment(e.target.value)} rows={4} maxLength={2000} required minLength={3} />
+          </div>
+          <div className="md:col-span-2">
+            <Button type="submit" disabled={mut.isPending} className="bg-gradient-to-r from-amber-400 to-orange-500 text-background border-0">
+              {mut.isPending ? "Submitting…" : "Submit review"}
+            </Button>
+          </div>
+        </form>
+      </Card>
+    </>
+  );
+}
