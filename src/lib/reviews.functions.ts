@@ -85,7 +85,7 @@ export const adminUpdateReview = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context);
-    const patch: Record<string, unknown> = {};
+    const patch: { approved?: boolean; featured?: boolean } = {};
     if (typeof data.approved === "boolean") patch.approved = data.approved;
     if (typeof data.featured === "boolean") patch.featured = data.featured;
     const { error } = await context.supabase.from("reviews").update(patch).eq("id", data.id);
