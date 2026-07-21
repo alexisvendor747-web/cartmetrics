@@ -86,16 +86,46 @@ export const Route = createFileRoute("/api/chat")({
           await supabaseAdmin.from("chats").update({ updated_at: new Date().toISOString(), model: body.model }).eq("id", body.chatId);
         }
 
-        // Call gateway
-        const userContent = body.attachments.length
+        // Build multimodal user content. Inline small text-like files as text
+        // so any chat model can "see" them, even when the model does not
+        // accept a `file` block. Images always use image_url (OpenAI-compat).
+        function isTextLike(mime: string, name: string) {
+          if (mime.startsWith("text/") || mime === "application/json" || mime === "text/markdown" || mime === "text/csv") return true;
+          const ext = name.split(".").pop()?.toLowerCase();
+          return ext === "txt" || ext === "md" || ext === "csv" || ext === "json";
+        }
+        function decodeTextDataUrl(dataUrl: string): string {
+          const comma = dataUrl.indexOf(",");
+          if (comma === -1) return "";
+          const meta = dataUrl.slice(5, comma);
+          const payload = dataUrl.slice(comma + 1);
+          if (meta.includes(";base64")) {
+            try { return Buffer.from(payload, "base64").toString("utf8"); }
+            catch { return ""; }
+          }
+          try { return decodeURIComponent(payload); } catch { return payload; }
+        }
+
+        const textAttachments = body.attachments.filter((a) => isTextLike(a.mime, a.name));
+        const imageAttachments = body.attachments.filter((a) => a.mime.startsWith("image/"));
+        const otherAttachments = body.attachments.filter((a) => !isTextLike(a.mime, a.name) && !a.mime.startsWith("image/"));
+
+        const inlinedTextBlock = textAttachments.length
+          ? "\n\n" + textAttachments.map((a) => {
+              const text = decodeTextDataUrl(a.dataUrl).slice(0, 120_000);
+              return `--- File: ${a.name} (${a.mime}) ---\n${text}\n--- End ${a.name} ---`;
+            }).join("\n\n")
+          : "";
+
+        const compositeText = `${body.message}${inlinedTextBlock}`;
+
+        const userContent: unknown = imageAttachments.length || otherAttachments.length
           ? [
-              { type: "text", text: body.message },
-              ...body.attachments.map((file) => file.mime.startsWith("image/")
-                ? ({ type: "image_url", image_url: { url: file.dataUrl } })
-                : ({ type: "file", file: { filename: file.name, file_data: file.dataUrl } })
-              ),
+              { type: "text", text: compositeText },
+              ...imageAttachments.map((file) => ({ type: "image_url", image_url: { url: file.dataUrl } })),
+              ...otherAttachments.map((file) => ({ type: "file", file: { filename: file.name, file_data: file.dataUrl } })),
             ]
-          : body.message;
+          : compositeText;
 
         const messages = [
           { role: "system", content: SYSTEM_PROMPT },
