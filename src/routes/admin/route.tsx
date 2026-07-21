@@ -77,6 +77,7 @@ function AdminLayout() {
   const lockFn = useServerFn(adminLock);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sessionVerified, setSessionVerified] = useState(false);
   const isLoginRoute = pathname === "/admin/login";
 
   const status = useQuery({
@@ -88,13 +89,31 @@ function AdminLayout() {
   });
 
   useEffect(() => {
+    if (isLoginRoute) {
+      setSessionVerified(false);
+      return;
+    }
+    let active = true;
+    setSessionVerified(false);
+    void status.refetch().then((result) => {
+      if (!active) return;
+      setSessionVerified(!!result.data?.isSuperAdmin && !!result.data.unlocked);
+    });
+    return () => {
+      active = false;
+    };
+  }, [isLoginRoute, pathname, status.refetch]);
+
+  useEffect(() => {
     if (!status.data || isLoginRoute) return;
     if (!status.data.isSuperAdmin) {
       queryClient.removeQueries({ queryKey: ["admin"] });
+      setSessionVerified(false);
       void supabase.auth.signOut();
       navigate({ to: "/", replace: true });
     } else if (!status.data.unlocked) {
       queryClient.removeQueries({ queryKey: ["admin"] });
+      setSessionVerified(false);
       navigate({ to: "/admin/login", replace: true });
     }
   }, [isLoginRoute, navigate, queryClient, status.data]);
@@ -102,12 +121,13 @@ function AdminLayout() {
   useEffect(() => {
     if (!status.error || isLoginRoute) return;
     queryClient.removeQueries({ queryKey: ["admin"] });
+    setSessionVerified(false);
     navigate({ to: "/admin/login", replace: true });
   }, [isLoginRoute, navigate, queryClient, status.error]);
 
   if (isLoginRoute) return <Outlet />;
 
-  if (status.isLoading || status.isError || !status.data) {
+  if (status.isLoading || status.isError || !status.data || !sessionVerified) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

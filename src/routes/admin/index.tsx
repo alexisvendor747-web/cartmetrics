@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { adminStats } from "@/lib/admin.functions";
 import { Users, MessageSquare, CreditCard, DollarSign, Zap, AlertTriangle, TrendingUp, Activity } from "lucide-react";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Admin Dashboard" }, { name: "robots", content: "noindex" }] }),
@@ -25,9 +26,18 @@ function Stat({ icon: Icon, label, value, hint, tone = "default" }: { icon: type
 }
 
 function Dashboard() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const statsFn = useServerFn(adminStats);
-  const q = useQuery({ queryKey: ["admin", "stats"], queryFn: () => statsFn(), refetchInterval: 30_000 });
-  const s = q.data;
+  const q = useQuery({ queryKey: ["admin", "stats"], queryFn: () => statsFn(), refetchInterval: 30_000, retry: false });
+  const locked = q.data?.locked === true;
+  const s = q.data && !q.data.locked ? q.data : null;
+
+  useEffect(() => {
+    if (!locked) return;
+    queryClient.removeQueries({ queryKey: ["admin"] });
+    navigate({ to: "/admin/login", replace: true });
+  }, [locked, navigate, queryClient]);
 
   return (
     <div className="p-6 space-y-6">
@@ -36,7 +46,7 @@ function Dashboard() {
         <p className="text-sm text-muted-foreground">Real-time platform health and usage.</p>
       </header>
 
-      {q.isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
+      {(q.isLoading || locked) && <div className="text-sm text-muted-foreground">Loading…</div>}
       {q.error && <div className="text-sm text-destructive">{(q.error as Error).message}</div>}
 
       {s && (
