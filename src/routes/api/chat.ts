@@ -133,10 +133,18 @@ export const Route = createFileRoute("/api/chat")({
           { role: "user", content: userContent },
         ];
 
+        // Auto-route to a vision-capable model when images are attached but the
+        // selected model can't see images (e.g. DeepSeek/Mistral text-only).
+        const visionCapable = /^(google\/gemini|openai\/gpt-5|openai\/gpt-4|anthropic\/claude)/i;
+        let effectiveModel = body.model;
+        if (imageAttachments.length && !visionCapable.test(body.model)) {
+          effectiveModel = "google/gemini-2.5-flash";
+        }
+
         const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: { "content-type": "application/json", authorization: `Bearer ${LOVABLE_API_KEY}` },
-          body: JSON.stringify({ model: body.model, messages, stream: true }),
+          body: JSON.stringify({ model: effectiveModel, messages, stream: true }),
         });
 
         if (!upstream.ok || !upstream.body) {

@@ -47,11 +47,15 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email, password,
           options: { emailRedirectTo: `${window.location.origin}/chat`, data: { display_name: name } },
         });
         if (error) throw error;
+        if (!signUpData.session) {
+          const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+          if (signInErr) throw signInErr;
+        }
         toast.success("Account created! Redirecting...");
         navigate({ to: "/chat" });
       } else if (mode === "signin") {
