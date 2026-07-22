@@ -13,7 +13,19 @@ const searchSchema = z.object({ mode: z.enum(["signin", "signup", "forgot"]).opt
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Sign in — CartMetrics AI" }, { name: "description", content: "Sign in or create your CartMetrics AI account." }] }),
+  head: () => ({
+    meta: [
+      { title: "Sign in — CartMetrics AI" },
+      { name: "description", content: "Sign in or create your CartMetrics AI account to access multi-model AI chat, credits and history." },
+      { property: "og:title", content: "Sign in — CartMetrics AI" },
+      { property: "og:description", content: "Sign in or create your CartMetrics AI account to access multi-model AI chat, credits and history." },
+      { property: "og:url", content: "https://cartmetrics.lovable.app/auth" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "Sign in — CartMetrics AI" },
+      { name: "twitter:description", content: "Sign in or create your CartMetrics AI account." },
+    ],
+    links: [{ rel: "canonical", href: "https://cartmetrics.lovable.app/auth" }],
+  }),
   component: AuthPage,
 });
 

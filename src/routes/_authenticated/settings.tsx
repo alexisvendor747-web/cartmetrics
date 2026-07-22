@@ -13,7 +13,15 @@ import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Settings — CartMetrics AI" }] }),
+  head: () => ({
+    meta: [
+      { title: "Settings — CartMetrics AI" },
+      { name: "description", content: "Manage your CartMetrics AI profile, default model, appearance and account preferences." },
+      { property: "og:title", content: "Settings — CartMetrics AI" },
+      { property: "og:description", content: "Manage your CartMetrics AI profile, default model, appearance and account preferences." },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: SettingsPage,
 });
 
