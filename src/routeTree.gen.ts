@@ -9,12 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as BlogBestAiWorkspacesRouteImport } from './routes/blog/best-ai-workspaces'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSupportRouteImport } from './routes/admin/support'
@@ -35,6 +37,11 @@ import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/c
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedChatChatIdRouteImport } from './routes/_authenticated/chat.$chatId'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -63,6 +70,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const BlogBestAiWorkspacesRoute = BlogBestAiWorkspacesRouteImport.update({
+  id: '/blog/best-ai-workspaces',
+  path: '/blog/best-ai-workspaces',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
@@ -165,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/credits': typeof AuthenticatedCreditsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -182,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/chat': typeof ApiChatRoute
+  '/blog/best-ai-workspaces': typeof BlogBestAiWorkspacesRoute
   '/admin/': typeof AdminIndexRoute
   '/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
@@ -190,6 +204,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/credits': typeof AuthenticatedCreditsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/admin/announcements': typeof AdminAnnouncementsRoute
@@ -206,6 +221,7 @@ export interface FileRoutesByTo {
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/chat': typeof ApiChatRoute
+  '/blog/best-ai-workspaces': typeof BlogBestAiWorkspacesRoute
   '/admin': typeof AdminIndexRoute
   '/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/chat': typeof AuthenticatedChatIndexRoute
@@ -217,6 +233,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/credits': typeof AuthenticatedCreditsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -234,6 +251,7 @@ export interface FileRoutesById {
   '/admin/support': typeof AdminSupportRoute
   '/admin/users': typeof AdminUsersRoute
   '/api/chat': typeof ApiChatRoute
+  '/blog/best-ai-workspaces': typeof BlogBestAiWorkspacesRoute
   '/admin/': typeof AdminIndexRoute
   '/_authenticated/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
@@ -245,6 +263,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/chat'
     | '/credits'
     | '/settings'
@@ -262,6 +281,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/api/chat'
+    | '/blog/best-ai-workspaces'
     | '/admin/'
     | '/chat/$chatId'
     | '/chat/'
@@ -270,6 +290,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/credits'
     | '/settings'
     | '/admin/announcements'
@@ -286,6 +307,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/api/chat'
+    | '/blog/best-ai-workspaces'
     | '/admin'
     | '/chat/$chatId'
     | '/chat'
@@ -296,6 +318,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/_authenticated/chat'
     | '/_authenticated/credits'
     | '/_authenticated/settings'
@@ -313,6 +336,7 @@ export interface FileRouteTypes {
     | '/admin/support'
     | '/admin/users'
     | '/api/chat'
+    | '/blog/best-ai-workspaces'
     | '/admin/'
     | '/_authenticated/chat/$chatId'
     | '/_authenticated/chat/'
@@ -324,11 +348,20 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiChatRoute: typeof ApiChatRoute
+  BlogBestAiWorkspacesRoute: typeof BlogBestAiWorkspacesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -370,6 +403,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/blog/best-ai-workspaces': {
+      id: '/blog/best-ai-workspaces'
+      path: '/blog/best-ai-workspaces'
+      fullPath: '/blog/best-ai-workspaces'
+      preLoaderRoute: typeof BlogBestAiWorkspacesRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
       id: '/api/chat'
@@ -579,7 +619,9 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiChatRoute: ApiChatRoute,
+  BlogBestAiWorkspacesRoute: BlogBestAiWorkspacesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
