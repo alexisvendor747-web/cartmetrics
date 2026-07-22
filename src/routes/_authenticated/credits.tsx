@@ -15,7 +15,15 @@ import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, Upload, Clock, XCircle, HelpCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/credits")({
-  head: () => ({ meta: [{ title: "Credits — CartMetrics AI" }] }),
+  head: () => ({
+    meta: [
+      { title: "Credits — CartMetrics AI" },
+      { name: "description", content: "Top up CartMetrics AI credits and review your billing history. Pay once, use across every model." },
+      { property: "og:title", content: "Credits — CartMetrics AI" },
+      { property: "og:description", content: "Top up CartMetrics AI credits and review your billing history." },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: CreditsPage,
 });
 

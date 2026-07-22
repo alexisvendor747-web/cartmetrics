@@ -107,7 +107,7 @@ function ChatLayout() {
           </div>
           <span className="font-display">CartMetrics</span>
         </Link>
-        <Button size="icon" variant="ghost" className="md:hidden" onClick={() => setMobileOpen(false)}><X className="h-4 w-4" /></Button>
+        <Button size="icon" variant="ghost" className="md:hidden" onClick={() => setMobileOpen(false)} aria-label="Close sidebar"><X className="h-4 w-4" /><span className="sr-only">Close sidebar</span></Button>
       </div>
       <div className="p-3 space-y-2">
         <Button onClick={() => createMut.mutate()} className="w-full justify-start gap-2 bg-gradient-to-r from-amber-400 to-orange-500 text-background border-0 hover:opacity-90">

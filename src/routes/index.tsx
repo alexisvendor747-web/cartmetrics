@@ -18,7 +18,11 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "CartMetrics AI — Think faster, build sharper" },
       { name: "description", content: "One premium AI workspace for chat, research, code, marketing and everything in between. GPT-5, Gemini, Claude and more." },
+      { property: "og:title", content: "CartMetrics AI — Think faster, build sharper" },
+      { property: "og:description", content: "One premium AI workspace for chat, research, code, marketing and everything in between. GPT-5, Gemini, Claude and more." },
+      { property: "og:url", content: "https://cartmetrics.lovable.app/" },
     ],
+    links: [{ rel: "canonical", href: "https://cartmetrics.lovable.app/" }],
   }),
   beforeLoad: async () => {
     // If signed in, send to chat

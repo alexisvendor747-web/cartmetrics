@@ -178,6 +178,7 @@ function ChatView() {
 
       <div ref={scrollerRef} className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto py-8 px-4 space-y-6">
+          <h1 className="sr-only">CartMetrics AI conversation</h1>
           {messagesQuery.isLoading && <div className="text-center text-muted-foreground text-sm">Loading…</div>}
           {messages.length === 0 && !messagesQuery.isLoading && (
             <div className="text-center py-20">
