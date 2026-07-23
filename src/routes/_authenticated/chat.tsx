@@ -39,11 +39,27 @@ function ChatLayout() {
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportSubject, setSupportSubject] = useState("");
   const [supportBody, setSupportBody] = useState("");
+  const [activeTicketId, setActiveTicketId] = useState<string | null>(null);
+  const [replyBody, setReplyBody] = useState("");
   const [lowCreditPrompted, setLowCreditPrompted] = useState(false);
 
   const chats = useQuery({ queryKey: ["chats"], queryFn: () => listFn() });
   const profile = useQuery({ queryKey: ["me"], queryFn: () => profileFn() });
-  const tickets = useQuery({ queryKey: ["my-support-tickets"], queryFn: () => listTicketsFn(), enabled: supportOpen });
+  const tickets = useQuery({ queryKey: ["my-support-tickets"], queryFn: () => listTicketsFn(), enabled: supportOpen, refetchInterval: supportOpen ? 15000 : false });
+  const getThreadFn = useServerFn(getMyTicketThread);
+  const replyFn = useServerFn(replyToMyTicket);
+  const thread = useQuery({
+    queryKey: ["my-ticket-thread", activeTicketId],
+    queryFn: () => getThreadFn({ data: { id: activeTicketId! } }),
+    enabled: !!activeTicketId,
+    refetchInterval: activeTicketId ? 10000 : false,
+  });
+  const replyMut = useMutation({
+    mutationFn: () => replyFn({ data: { id: activeTicketId!, body: replyBody } }),
+    onSuccess: () => { setReplyBody(""); qc.invalidateQueries({ queryKey: ["my-ticket-thread", activeTicketId] }); qc.invalidateQueries({ queryKey: ["my-support-tickets"] }); toast.success("Reply sent"); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+  });
+
 
   const createMut = useMutation({
     mutationFn: () => createFn({ data: {} }),
