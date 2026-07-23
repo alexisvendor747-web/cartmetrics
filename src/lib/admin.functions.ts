@@ -461,6 +461,7 @@ export const sendBroadcast = createServerFn({ method: "POST" })
     const emails = (rows ?? []).map((r) => r.email).filter(Boolean) as string[];
 
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    const RESEND_FROM = process.env.RESEND_FROM || "CartMetrics AI <onboarding@resend.dev>";
     let sent = 0;
     let errorMsg: string | null = null;
     if (!RESEND_API_KEY) {
@@ -477,14 +478,22 @@ export const sendBroadcast = createServerFn({ method: "POST" })
               authorization: `Bearer ${RESEND_API_KEY}`,
             },
             body: JSON.stringify({
-              from: "CartMetrics AI <noreply@cartmetrics.ai>",
+              from: RESEND_FROM,
               to: chunk,
               subject: data.subject,
               html: data.body_html,
             }),
           });
           if (res.ok) sent += chunk.length;
-          else if (!errorMsg) errorMsg = `Resend error ${res.status}`;
+          else {
+            const detail = await res.text().catch(() => "");
+            if (!errorMsg) {
+              errorMsg = `Resend ${res.status}: ${detail.slice(0, 400) || res.statusText}. ` +
+                (res.status === 403
+                  ? "The sender domain isn't verified in Resend. Verify a domain at resend.com/domains and set the RESEND_FROM secret to an address on that domain (e.g. \"CartMetrics <news@yourdomain.com>\"). The default onboarding@resend.dev only delivers to your own Resend account email."
+                  : "");
+            }
+          }
         } catch (e) {
           if (!errorMsg) errorMsg = String(e);
         }
