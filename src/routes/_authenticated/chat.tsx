@@ -207,43 +207,74 @@ function ChatLayout() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={supportOpen} onOpenChange={setSupportOpen}>
+      <Dialog open={supportOpen} onOpenChange={(o) => { setSupportOpen(o); if (!o) setActiveTicketId(null); }}>
         <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Contact support</DialogTitle>
-            <DialogDescription>Send a message to the CartMetrics AI owner. Replies appear in the admin dashboard.</DialogDescription>
+            <DialogTitle>{activeTicketId ? "Support conversation" : "Contact support"}</DialogTitle>
+            <DialogDescription>
+              {activeTicketId ? "Reply to continue the conversation with the CartMetrics team." : "Send a new message or open a previous conversation to see replies."}
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="support-subject">Subject</Label>
-              <Input id="support-subject" value={supportSubject} onChange={(e) => setSupportSubject(e.target.value)} maxLength={160} placeholder="Billing, credits, account help…" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="support-body">Message</Label>
-              <Textarea id="support-body" value={supportBody} onChange={(e) => setSupportBody(e.target.value)} rows={5} maxLength={4000} placeholder="Tell us what you need help with." />
-            </div>
-            {tickets.data && tickets.data.length > 0 && (
-              <div className="rounded-lg border border-border p-3">
-                <div className="text-xs font-medium text-muted-foreground mb-2">Recent messages</div>
-                <div className="space-y-2">
-                  {tickets.data.slice(0, 3).map((t) => (
-                    <div key={t.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 text-xs">
-                      <span className="truncate">{t.subject}</span>
-                      <span className="rounded-full bg-accent px-2 py-0.5 text-muted-foreground">{t.status}</span>
-                    </div>
-                  ))}
-                </div>
+
+          {!activeTicketId && (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="support-subject">Subject</Label>
+                <Input id="support-subject" value={supportSubject} onChange={(e) => setSupportSubject(e.target.value)} maxLength={160} placeholder="Billing, credits, account help…" />
               </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setSupportOpen(false)}>Cancel</Button>
-            <Button onClick={() => supportMut.mutate()} disabled={supportSubject.trim().length < 3 || supportBody.trim().length < 10 || supportMut.isPending}>
-              {supportMut.isPending ? "Sending…" : "Send message"}
-            </Button>
-          </DialogFooter>
+              <div className="space-y-1.5">
+                <Label htmlFor="support-body">Message</Label>
+                <Textarea id="support-body" value={supportBody} onChange={(e) => setSupportBody(e.target.value)} rows={5} maxLength={4000} placeholder="Tell us what you need help with." />
+              </div>
+              {tickets.data && tickets.data.length > 0 && (
+                <div className="rounded-lg border border-border p-3">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">Your conversations</div>
+                  <div className="space-y-1">
+                    {tickets.data.map((t) => (
+                      <button key={t.id} onClick={() => setActiveTicketId(t.id)} className="w-full grid grid-cols-[minmax(0,1fr)_auto] gap-2 text-xs items-center rounded-md px-2 py-1.5 hover:bg-accent text-left">
+                        <span className="truncate">{t.subject}</span>
+                        <span className="rounded-full bg-accent px-2 py-0.5 text-muted-foreground capitalize">{t.status}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="ghost" onClick={() => setSupportOpen(false)}>Cancel</Button>
+                <Button onClick={() => supportMut.mutate()} disabled={supportSubject.trim().length < 3 || supportBody.trim().length < 10 || supportMut.isPending}>
+                  {supportMut.isPending ? "Sending…" : "Send message"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {activeTicketId && (
+            <div className="space-y-3">
+              <button onClick={() => setActiveTicketId(null)} className="text-xs text-muted-foreground hover:text-foreground">← Back to all conversations</button>
+              <div className="text-sm font-medium">{thread.data?.ticket.subject}</div>
+              <div className="rounded-lg border border-border p-3 max-h-72 overflow-y-auto space-y-3">
+                {thread.data?.messages.map((m) => (
+                  <div key={m.id} className={cn("text-sm", m.is_staff ? "" : "")}>
+                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">
+                      {m.is_staff ? "Support team" : "You"} · {new Date(m.created_at).toLocaleString()}
+                    </div>
+                    <div className={cn("rounded-lg px-3 py-2 whitespace-pre-wrap break-words", m.is_staff ? "bg-primary/10 border border-primary/20" : "bg-accent")}>{m.body}</div>
+                  </div>
+                ))}
+                {thread.isLoading && <div className="text-xs text-muted-foreground">Loading…</div>}
+              </div>
+              <Textarea value={replyBody} onChange={(e) => setReplyBody(e.target.value)} rows={3} maxLength={4000} placeholder="Type your reply…" />
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setSupportOpen(false)}>Close</Button>
+                <Button onClick={() => replyMut.mutate()} disabled={replyBody.trim().length < 1 || replyMut.isPending}>
+                  {replyMut.isPending ? "Sending…" : "Send reply"}
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
