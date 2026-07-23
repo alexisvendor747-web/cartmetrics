@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listChats, createChat, renameChat, togglePin, deleteChat, getMyProfile, createSupportTicket, listMySupportTickets } from "@/lib/chats.functions";
+import { listChats, createChat, renameChat, togglePin, deleteChat, getMyProfile, createSupportTicket, listMySupportTickets, getMyTicketThread, replyToMyTicket } from "@/lib/chats.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
