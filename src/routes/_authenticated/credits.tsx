@@ -29,17 +29,18 @@ export const Route = createFileRoute("/_authenticated/credits")({
 
 function CreditsPage() {
   const qc = useQueryClient();
-  const settingsFn = useServerFn(getAppSettings);
+  const packagesFn = useServerFn(listActivePackages);
   const profileFn = useServerFn(getMyProfile);
   const listFn = useServerFn(listMyPayments);
   const createFn = useServerFn(createPaymentRequest);
   const uploadFn = useServerFn(uploadProof);
 
-  const settings = useQuery({ queryKey: ["settings"], queryFn: () => settingsFn() });
+  const packagesQ = useQuery({ queryKey: ["active-packages"], queryFn: () => packagesFn() });
   const profile = useQuery({ queryKey: ["me"], queryFn: () => profileFn() });
   const payments = useQuery({ queryKey: ["my-payments"], queryFn: () => listFn() });
 
-  const packs = (settings.data?.find((s) => s.key === "credit_packs")?.value as any[] | undefined) ?? [];
+  const packs = packagesQ.data ?? [];
+
   const [openPack, setOpenPack] = useState<any | null>(null);
   const [bank, setBank] = useState("");
   const [amount, setAmount] = useState("");
