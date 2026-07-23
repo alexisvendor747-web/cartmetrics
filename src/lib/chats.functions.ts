@@ -124,6 +124,51 @@ export const listMySupportTickets = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return data ?? [];
   });
+export const getMyTicketThread = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { data: ticket, error: tErr } = await context.supabase
+      .from("support_tickets")
+      .select("id, user_id, subject, status, priority, created_at, updated_at")
+      .eq("id", data.id).eq("user_id", context.userId).single();
+    if (tErr) throw new Error(tErr.message);
+    const { data: msgs, error: mErr } = await context.supabase
+      .from("support_ticket_messages")
+      .select("id, author_id, is_staff, body, created_at")
+      .eq("ticket_id", data.id).order("created_at");
+    if (mErr) throw new Error(mErr.message);
+    return { ticket, messages: msgs ?? [] };
+  });
+
+export const replyToMyTicket = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    id: z.string().uuid(),
+    body: z.string().trim().min(1).max(4000),
+  }).parse(d))
+  .handler(async ({ context, data }) => {
+    const { data: t, error: tErr } = await context.supabase
+      .from("support_tickets").select("id").eq("id", data.id).eq("user_id", context.userId).single();
+    if (tErr || !t) throw new Error("Ticket not found");
+    const { error } = await context.supabase.from("support_ticket_messages")
+      .insert({ ticket_id: data.id, author_id: context.userId, is_staff: false, body: data.body });
+    if (error) throw new Error(error.message);
+    await context.supabase.from("support_tickets").update({ status: "open", updated_at: new Date().toISOString() }).eq("id", data.id);
+    return { ok: true };
+  });
+
+export const listActivePackages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("credit_packages")
+      .select("id, name, credits, price, currency, bonus_credits, featured, sort_order, description")
+      .eq("active", true)
+      .order("sort_order");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
 
 // Allow-list of keys safe to expose to authenticated end-users.
 // Never include secret keys such as `admin_passkey_sha256`.
@@ -147,3 +192,4 @@ export const getAppSettings = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return (data ?? []) as { key: string; value: Json }[];
   });
+
