@@ -110,14 +110,23 @@ function CreditsPage() {
 
         <div className="grid gap-4 md:grid-cols-4">
           {packs.map((p) => (
-            <Card key={p.id} className={`p-6 relative ${p.popular ? "border-primary shadow-glow" : ""}`}>
-              {p.popular && <div className="absolute -top-3 left-6 text-xs px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-background font-medium">Most popular</div>}
-              <div className="font-medium">{p.label}</div>
-              <div className="mt-3 font-display text-4xl">${p.price}</div>
-              <div className="text-muted-foreground text-sm">{p.credits.toLocaleString()} credits</div>
+            <Card key={p.id} className={`p-6 relative ${p.featured ? "border-primary shadow-glow" : ""}`}>
+              {p.featured && <div className="absolute -top-3 left-6 text-xs px-3 py-1 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-background font-medium">Most popular</div>}
+              <div className="font-medium">{p.name}</div>
+              <div className="mt-3 font-display text-4xl">${Number(p.price).toFixed(0)}</div>
+              <div className="text-muted-foreground text-sm">
+                {p.credits.toLocaleString()} credits{p.bonus_credits ? ` + ${p.bonus_credits} bonus` : ""}
+              </div>
+              {p.description && <div className="text-xs text-muted-foreground mt-2">{p.description}</div>}
               <Button onClick={() => { setOpenPack(p); setAmount(String(p.price)); }} className="w-full mt-6">Purchase</Button>
             </Card>
           ))}
+          {packs.length === 0 && !packagesQ.isLoading && (
+            <Card className="p-8 text-center text-sm text-muted-foreground md:col-span-4">
+              No credit packs available yet. Check back soon.
+            </Card>
+          )}
+
         </div>
 
         <div>
