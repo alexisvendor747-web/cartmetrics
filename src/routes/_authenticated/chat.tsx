@@ -45,7 +45,7 @@ function ChatLayout() {
 
   const chats = useQuery({ queryKey: ["chats"], queryFn: () => listFn() });
   const profile = useQuery({ queryKey: ["me"], queryFn: () => profileFn() });
-  const tickets = useQuery({ queryKey: ["my-support-tickets"], queryFn: () => listTicketsFn(), enabled: supportOpen, refetchInterval: supportOpen ? 15000 : false });
+  const tickets = useQuery({ queryKey: ["my-support-tickets"], queryFn: () => listTicketsFn(), refetchInterval: 30000 });
   const getThreadFn = useServerFn(getMyTicketThread);
   const replyFn = useServerFn(replyToMyTicket);
   const thread = useQuery({
